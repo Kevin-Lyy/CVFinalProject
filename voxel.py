@@ -76,7 +76,25 @@ def line_intersection(lineA, lineB):
 def delta_color(colorA, colorB):
     return pow(pow((colorA[0]-colorB[0]),2) + pow((colorA[1]-colorB[1]),2) + pow((colorA[2]-colorB[2]),2), 0.5)
 
-def voxel_coloring(images, angles):
+def consistent(colors, threshold):
+    for i in range(len(colors)):
+        for j in range(i+1, len(color)):
+            if delta_color(colors[i], colors[j]) > threshold:
+                return False
+    return True
+
+def average_color(colors):
+    color = [0,0,0]
+    for i in range(len(colors)):
+        color[0] += colors[i][0]
+        color[1] += colors[i][1]
+        color[2] += colors[i][2]
+    color[0] = color[0]/len(colors)
+    color[1] = color[1]/len(colors)
+    color[2] = color[2]/len(colors)
+    return color
+
+def voxel_coloring(images, angles, threshold=20):
     image_lines = [image_line(images[i], angles[i]) for i in len(images)]
     num_images = len(images)
     width, height = images[0].size
@@ -84,7 +102,8 @@ def voxel_coloring(images, angles):
     for layer in range(width):
         for r in range(height):
             for c in range(width):
-                voxel = layer[r][c]
+                colors = []
+                coords = []
                 #project voxel onto the images
                 for i in range(num_images):
                     projected = projection_line(c,layer, images[i], angles[i])
@@ -92,12 +111,13 @@ def voxel_coloring(images, angles):
                     if len(projected_point) == 1:
                         projected_point[0][0] = projected_point[0][0]*width/len(image_line)
                     colors.append(images[i].getpixel(projected_point[0])
-                #evaluate voxel consistency
-                
-                pass
-            # color voxels
-            # remember image pixels to mark
-        # mark off pixels
+                    coords.append(projected_point[0])
+                #if consistent color then color voxel and remove from images
+                if consistent(colors):
+                    voxels[layer][r][c] = average_color(colors)
+                    for i in range(num_images):
+                        images[i].putpixel(coords[i], (0,0,0))
+    return voxels
 
 def reconstruction_size(image, max_height):
     image = image.resize((width,height/LEGO_VOXEL_SCALE))
