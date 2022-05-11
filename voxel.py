@@ -24,6 +24,7 @@ def image_line(image, theta):
     y1 = int(cw + cw*math.sin(rad))
     x2 = int(cw - cw*math.cos(rad))
     y2 = int(cw - cw*math.sin(rad))
+    print("Image line for ", theta, ": ",x1,y1,x2,y2)
     return list(zip(*line(x1,y1,x2,y2)))
 
 '''
@@ -34,40 +35,36 @@ def image_line_to_col(image_line, c, l, width):
 
 def projection_line(col, layer, image, theta):
     width, height = image.size
-    rad = math.radians(90-theta)
-    cw = width/2
+    rad = math.radians(theta)
     coordinates = []
     cos_value = math.cos(rad)
     sin_value = math.sin(rad)
-    if(cos_value!=0):
+    if(sin_value!=0):
         # CASE1: x = 0
         x = 0
-        length = -col/cos_value
-        y = int(layer + length*sin_value)
+        y = int(-cos_value*(x-col)/sin_value + layer)
         if(y >= 0 and y < width):
             coordinates.append((x,y))
         # CASE2: x = width -1
         x = width -1
-        length = -col/cos_value
-        y = int(layer + length*sin_value)
+        y = int(-cos_value*(x-col)/sin_value + layer)
         if(y >= 0 and y < width):
             coordinates.append((x,y))
-    if(sin_value!=0):
+    if(cos_value!=0):
         # CASE3: y = 0
         y = 0
-        length = -col/sin_value
-        x = int(col + length*cos_value)
+        x = int(-(y-layer)*sin_value/cos_value + col)
         if (x >= 0 and y < width):
             coordinates.append((x,y))
         # CASE4: y = width -1
         y = width- 1
-        length = -col/sin_value
-        x = int(col + length*cos_value)
+        x = int(-(y-layer)*sin_value/cos_value + col)
         if (x >= 0 and y < width):
             coordinates.append((x,y))
+    print("Projection Line for ", col, " ", layer, ": ", coordinates)
     coordinates = list(set(coordinates))
     if len(coordinates) == 1:
-        return [[coordinates[0][0],coordinates[0][1]]]
+        return coordinates
     if len(coordinates) == 2:
         return zip(*line(coordinates[0][0], coordinates[0][1], coordinates[1][0], coordinates[1][1]))
     return []
@@ -75,8 +72,14 @@ def projection_line(col, layer, image, theta):
 def line_intersection(lineA, lineB):
     return list(set(lineA).intersection(set(lineB)))
 
+#def line_intersection(coordA, coordB):
+#    pass
+
 def delta_color(colorA, colorB):
-    return pow(pow((colorA[0]-colorB[0]),2) + pow((colorA[1]-colorB[1]),2) + pow((colorA[2]-colorB[2]),2), 0.5)
+    R = pow(pow((colorA[0]-colorB[0]),2),0.5)
+    G = pow(pow((colorA[1]-colorB[1]),2),0.5)
+    B = pow(pow((colorA[2]-colorB[2]),2),0.5)
+    return (R+G+B)/3
 
 def consistent(colors, threshold):
     for i in range(len(colors)):
@@ -96,30 +99,61 @@ def average_color(colors):
     color[2] = int(color[2]/len(colors))
     return color
 
+def rect_points(coordA, coordB):
+    points = [[coordA[0], i] for i in range(coordB[1],coordA[1])]
+    points += [[i, coordA[1]] for i in range(coordA[0],coordB[0])]
+    points += [[coordB[0], i] for i in range(coordA[1],coordB[1],-1)]
+    points += [[i, coordB[1]] for i in range(coordB[0],coordA[0],-1)]
+    return points
+
 def voxel_coloring(images, angles, threshold=20):
     image_lines = [image_line(images[i], angles[i]) for i in range(len(images))]
     num_images = len(images)
     width, height = images[0].size
-    voxels = np.zeros([width, height, width, 3])
-    for layer in range(width):
-        print(layer, end=" ")
-        for r in range(height):
-            for c in range(width):
-                colors = []
-                coords = []
-                #project voxel onto the images
+    #voxels = []
+    #voxels = np.zeros([width, height, width, 3])
+    voxels = np.full([width, height, width, 3], 255)
+    cw = int((width-1)/2)
+    coordA = [0, width-1] #xz coordinates
+    coordB = [width-1, 0] #xz coordinates
+
+    #loop through rect layers
+    while(coordB[0]-coordA[0] > 1):
+        # through voxels in each layer
+        for row in range(height):
+        #for row in range(32,33):
+            for p in rect_points(coordA, coordB):
+                vp = (p[0], row, p[1]) #(x,y,z) or (col,row,layer)
+                coords = [] # store coordinates of point projected on images
+                colors = [] # store colors of point projected on images
+                image_indexes = [] # store index of relevant images
                 for i in range(num_images):
-                    projected = projection_line(c,layer, images[i], angles[i])
+                    projected = projection_line(p[0],p[1], images[i], angles[i])
                     projected_point = line_intersection(projected, image_lines[i])
                     if len(projected_point) == 1:
-                        adjusted_point = [int(projected_point[0][0]*((width-1)/len(image_lines[i]))), r]
+                        ac = int(math.dist(projected_point[0], image_lines[i][-1]))
+                        adjusted_point = [ac, row]
+                        image_indexes.append(i)
                         colors.append(images[i].getpixel(tuple(adjusted_point)))
                         coords.append(adjusted_point)
-                #if consistent color then color voxel and remove from images
-                if len(coords) == num_images and len(colors) > 0 and consistent(colors, threshold):
-                    voxels[layer][r][c] = average_color(colors)
-                    for i in range(num_images):
-                        images[i].putpixel(coords[i], (0,0,0))
+                    else:
+                        image_indexes.append(i)
+                        colors.append([0,0,0])
+                if len(colors) == 0 or [0,0,0] in colors:
+                    voxels[p[1]][row][p[0]] = [0,0,0]
+                elif (len(colors) > 0 and consistent(colors, threshold)) or len(colors) == 1:
+                    color = average_color(colors)
+                    if color != [0,0,0]:
+                        voxels[p[1]][row][p[0]] = color
+                        #voxels.append([p[0], row, p[1], color[0], color[1], color[2]])
+                        #for i in range(len(colors)):
+                        #    if i in image_indexes:
+                        #        images[i].putpixel(coords[i], (0,0,0))
+                #if color != [0,0,0]: print(colors, end=" ")
+        #set next layer coords
+        coordA = [coordA[0]+1, coordA[1]-1]
+        coordB = [coordB[0]-1, coordB[1]+1]
+    #return np.array(voxels)
     return voxels
 
 def reconstruction_size(image, max_height):
@@ -132,10 +166,15 @@ def reconstruction_size(image, max_height):
 
 def driver(images, angles):
     images = [Image.open(i) for i in images]
-    scaled_width, scaled_height = reconstruction_size(images[0], 1000)
+    scaled_width, scaled_height = reconstruction_size(images[0], 500)
     images = [i.resize((scaled_width, scaled_height), Image.Resampling.BILINEAR) for i in images]
     #INSERT IMAGE RECOLOR
     voxels = voxel_coloring(images, angles)
-    np.save("voxels_1000", voxels)
+    np.save("voxels_500", voxels)
 
-driver(["36_r0.png", "36_r60.png", "36_r120.png", "36_r180.png", "36_r240.png", "36_r300.png"], [0,60,120,180,240,300])
+#driver(["36_r0.png", "36_r60.png", "36_r120.png", "36_r180.png", "36_r240.png", "36_r300.png"], [0,60,120,180,240,300])
+driver(["36_r330.png", "36_r0.png", "36_r30.png"],[330,0,30])
+#driver(["36_r330.png"],[330])
+#driver(["36_r30.png"],[30])
+#driver(["36_r0.png"],[0])
+#driver(["36_r0.png", "36_r30.png", "36_r60.png"],[0,30,60])
