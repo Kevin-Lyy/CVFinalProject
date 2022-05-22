@@ -51,7 +51,7 @@ def reColorLego():
             new_image.append(pixel)
 
     img.putdata(new_image)
-    img.save("reColor.jpg")
+    img.save("mosaic.jpg")
 
             
 

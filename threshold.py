@@ -1,5 +1,5 @@
 import cv2
-image1 = cv2.imread("images/ducc.png")
+image1 = cv2.imread("ducc.png")
 thresh_val = 40
 image1[image1 < thresh_val] = 0
 
