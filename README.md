@@ -1,47 +1,47 @@
 # Legos
 
-[Amsterdam Library of Object Images (ALOI)](https://aloi.science.uva.nl/)
+Our data is from the [Amsterdam Library of Object Images (ALOI)](https://aloi.science.uva.nl/)
 
-`ALOI Collection` > `Object Images` > `{img}` > `object orientations`
+To choose an object go to:  
+`ALOI Collection` > `Object Images` > `[img]` and click on any image 
 
-[K3D-jupyter](https://k3d-jupyter.org/)
 
-# setting up the venv
+# Setting up the venv
 
+```bash
 $ python3 -m venv /path/to/venv
 $ . /path/to/venv/bin/activate
 $ pip install -r requirements.txt
+```
 
 # Part 1 - Mosaics
 
-$apt install python3-pip
-
-
-$pip install opencv-python
-
-
-$python3 threshold.py
-
-
-$pip install pillow
-
-
-$pip install matplotlib
-
-
-$python3 mosaic.py
-
+```bash
+$ apt install python3-pip
+$ pip install opencv-python
+$ python3 threshold.py
+$ pip install pillow
+$ pip install matplotlib
+$ python3 mosaic.py
+```
 
 This will produce 3 files:
-
+```
 mosaicCup.jpg
-
 mosaicDucc.jpg
-
 mosaicshoo.jpg
+```
 
 # Part 2 - Voxels
 
-# to run the code
+Open [lego_voxels.ipynb in Google Colab](https://colab.research.google.com/github/Kevin-Lyy/CVFinalProject/blob/master/lego_voxels.ipynb) ([Github file here](/lego_voxels.ipynb))  
 
-$ python voxel.py
+## To Run 
+
+More detailed instructions are available in the file itself
+
+1. Run the pip installs  (the cell below **Installs**)
+2. **Restart the runtime** so the installs work correctly - you *will* get errors otherwise
+3. **Run all cells** 
+4. Navigate to the **Run** cell 
+5. Modify **`lego_image`** and **`lego_image_deg`** (the cell below **Run**) as instructed, then run all cells below to see results
