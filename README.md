@@ -12,14 +12,26 @@ $ python3 -m venv /path/to/venv
 $ . /path/to/venv/bin/activate
 $ pip install -r requirements.txt
 
-# Part 1 - Mosaics 
+# Part 1 - Mosaics
 
-$apt install python3-pip 
+$apt install python3-pip
+
+
 $pip install opencv-python
+
+
 $python3 threshold.py
+
+
 $pip install pillow
+
+
 $pip install matplotlib
+
+
 $python3 mosaic.py
+
+
 This will produce 3 files:
 
 mosaicCup.jpg
