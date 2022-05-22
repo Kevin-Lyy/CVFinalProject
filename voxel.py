@@ -240,6 +240,12 @@ def reconstruction_size(image, max_height):
     new_im_width = int(im_width*scale)
     return new_im_width, new_im_height
 
+def build_images(voxels):
+    voxels = np.swapaxes(voxels, 0, 1)
+    scaled_width = len(voxels)*5
+    for i in range(len(voxels)):
+        Image.fromarray(voxels[i].astype('uint8'), 'RGB').resize((scaled_width, scaled_width), Image.Resampling.BILINEAR).save(str(i)+"layer_build.png")
+
 def driver(images, angles):
     images = [Image.open(i) for i in images]
     scaled_width, scaled_height = reconstruction_size(images[0], 500)
@@ -255,28 +261,18 @@ def driver(images, angles):
                 G = color[1]/255
                 B = color[2]/255
                 points.append([col, row, layer, R,G,B])
-                voxels[layer][row][col] = [color[2],color[1],color[0]]
+                #voxels[layer][row][col] = [color[2],color[1],color[0]]
     points = np.array(points)
+    build_images(voxels)
     np.save("voxels_500", voxels)
     np.save("points_500", points)
 
 #driver(["36_r0.png", "36_r30.png", "36_r60.png", "36_r90.png", "36_r120.png", "36_r150.png", "36_r180.png", "36_r210.png", "36_r240.png", "36_r270.png", "36_r300.png", "36_r330.png"], [0,30,60,90,120,150,180,210,240,270,300, 330])
-#driver(["36_r0.png", "36_r60.png", "36_r120.png", "36_r180.png", "36_r240.png", "36_r300.png"], [0,60,120,180,240,300])
-#driver(["36_r0.png", "36_r60.png", "36_r120.png"], [0,60,120])
-#driver(["36_r0.png", "36_r45.png", "36_r90.png", "36_r135.png"], [0,45,90,135])
-#driver(["36_r330.png", "36_r0.png", "36_r30.png"],[330,0,30])
-#driver(["36_r330.png"],[330])
-#driver(["36_r30.png"],[30])
-#driver(["36_r0.png"],[0])
 
-#driver(["36_r60.png"],[60])
-#driver(["36_r120.png"],[120])
-#driver(["36_r180.png"],[180])
-#driver(["36_r240.png"],[240])
-#driver(["36_r300.png"],[300])
-
-#driver(["36_r0.png", "36_r30.png", "36_r60.png"],[0,30,60])
-
-#driver(["62_r330.png", "62_r0.png", "62_r30.png"],[330,0,30])
-#driver(["62_r0.png", "62_r60.png", "62_r120.png", "62_r180.png", "62_r240.png", "62_r300.png"], [0,60,120,180,240,300])
 driver(["62_r0.png", "62_r30.png", "62_r60.png", "62_r90.png", "62_r120.png", "62_r150.png", "62_r180.png", "62_r210.png", "62_r240.png", "62_r270.png", "62_r300.png", "62_r330.png"], [0,30,60,90,120,150,180,210,240,270,300, 330])
+
+#driver(["161_r0.png", "161_r30.png", "161_r60.png", "161_r90.png", "161_r120.png", "161_r150.png", "161_r180.png", "161_r210.png", "161_r240.png", "161_r270.png", "161_r300.png", "161_r330.png"], [0,30,60,90,120,150,180,210,240,270,300, 330])
+
+#driver(["25_r0.png", "25_r30.png", "25_r60.png", "25_r90.png", "25_r120.png", "25_r150.png", "25_r180.png", "25_r210.png", "25_r240.png", "25_r270.png", "25_r300.png", "25_r330.png"], [0,30,60,90,120,150,180,210,240,270,300, 330])
+
+#driver(["556_r0.png", "556_r30.png", "556_r60.png", "556_r90.png", "556_r120.png", "556_r150.png", "556_r180.png", "556_r210.png", "556_r240.png", "556_r270.png", "556_r300.png", "556_r330.png"], [0,30,60,90,120,150,180,210,240,270,300, 330])
